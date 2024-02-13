@@ -52,17 +52,19 @@ class Tetris:
         self.field = []
         self.height = 0
         self.width = 0
-        self.x = 100
-        self.y = 60
+        self.x = 300
+        self.y = 85
         self.zoom = 20
         self.figure = None
         self.height = height
         self.width = width
         self.startX = width // 2 - 2
-        self.startY = 0
+        self.startY = height //2 - 2
+        self.gravity = 'down'
         self.field = []
         self.score = 0
         self.state = "start"
+        self.screen_rotation = 0
         for i in range(height):
             new_line = []
             for j in range(width):
@@ -80,7 +82,10 @@ class Tetris:
                     if i + self.figure.y > self.height - 1 or \
                             j + self.figure.x > self.width - 1 or \
                             j + self.figure.x < 0 or \
+                            i + self.figure.y < 0 or \
                             self.field[i + self.figure.y][j + self.figure.x] > 0:
+                            #check for out of top boundary
+
                         intersection = True
         return intersection
 
@@ -100,7 +105,14 @@ class Tetris:
 
     def go_space(self):
         while not self.intersects():
-            self.figure.y += 1
+            if self.gravity=='down':
+                self.figure.y += 1
+            elif self.gravity=='up':
+                self.figure.y -= 1
+            elif self.gravity=='left':
+                self.figure.x -= 1
+            elif self.gravity=='right':
+                self.figure.x += 1
         self.figure.y -= 1
         self.freeze()
 
@@ -108,6 +120,12 @@ class Tetris:
         self.figure.y += 1
         if self.intersects():
             self.figure.y -= 1
+            self.freeze()
+
+    def go_up(self):
+        self.figure.y -= 1
+        if self.intersects():
+            self.figure.y += 1
             self.freeze()
 
     def freeze(self):
@@ -125,12 +143,32 @@ class Tetris:
         self.figure.x += dx
         if self.intersects():
             self.figure.x = old_x
+            self.freeze()
 
     def rotate(self):
         old_rotation = self.figure.rotation
         self.figure.rotate()
         if self.intersects():
             self.figure.rotation = old_rotation
+    
+    def gravity_switch(self):
+        if self.gravity=='down':
+            self.gravity='left'
+        elif self.gravity=='left':
+            self.gravity='up'
+        elif self.gravity=='up':
+            self.gravity='right'
+        elif self.gravity=='right':
+            self.gravity='down'
+
+        if self.gravity == 'down':
+            self.screen_rotation = 0
+        elif self.gravity == 'up':
+            self.screen_rotation = 180
+        elif self.gravity == 'left':
+            self.screen_rotation = 90
+        elif self.gravity == 'right':
+            self.screen_rotation = 270
 
 
 # Initialize the game engine
@@ -164,41 +202,78 @@ while not done:
 
     if counter % (fps // game.level // 2) == 0 or pressing_down:
         if game.state == "start":
-            game.go_down()
+            if game.gravity=='down':
+                game.go_down()
+            elif game.gravity=='up':
+                game.go_up()
+            elif game.gravity=='left':
+                game.go_side(-1)
+            elif game.gravity=='right':
+                game.go_side(1)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             done = True
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP:
-                game.rotate()
-            if event.key == pygame.K_DOWN:
-                pressing_down = True
+                if game.gravity=='down':
+                    game.rotate()
+                else:
+                    game.go_up()
             if event.key == pygame.K_LEFT:
-                game.go_side(-1)
+                if game.gravity=='right':
+                    game.rotate()
+                else:
+                    game.go_side(-1)
             if event.key == pygame.K_RIGHT:
-                game.go_side(1)
+                if game.gravity=='left':
+                    game.rotate()
+                else:
+                    game.go_side(1)
+            if event.key == pygame.K_DOWN:
+                if game.gravity=='up':
+                    game.rotate()
+                else:
+                    pressing_down = True
             if event.key == pygame.K_SPACE:
                 game.go_space()
+            if event.key == pygame.K_x:
+                game.gravity_switch()
             if event.key == pygame.K_ESCAPE:
                 game.__init__(30, 30)
     
     keys = pygame.key.get_pressed()
     
     if keys[pygame.K_DOWN]:
-        game.go_down()
+        if game.gravity=='up':
+            pass
+        else:
+            game.go_down()
     
-    if keys[pygame.K_LEFT]:
-        game.go_side(-1)
+    if keys[pygame.K_UP]:
+        if game.gravity=='down':
+            pass
+        else:
+            game.go_up()
 
+    if keys[pygame.K_LEFT]:
+        if game.gravity=='right':
+            pass
+        else:
+            game.go_side(-1)
     if keys[pygame.K_RIGHT]:
-        game.go_side(1)
+        if game.gravity=='left':
+            pass
+        else:
+            game.go_side(1)
 
     if event.type == pygame.KEYUP:
             if event.key == pygame.K_DOWN:
                 pressing_down = False
 
     screen.fill(WHITE)
+
+
 
     for i in range(game.height):
         for j in range(game.width):
@@ -219,6 +294,9 @@ while not done:
 
     font = pygame.font.SysFont('Calibri', 25, True, False)
     font1 = pygame.font.SysFont('Calibri', 65, True, False)
+    rotated_screen = pygame.transform.rotate(screen, game.screen_rotation)
+    screen.blit(rotated_screen, rotated_screen.get_rect(center=screen.get_rect().center))
+
     text = font.render("Score: " + str(game.score), True, BLACK)
     text_game_over = font1.render("Game Over", True, (255, 125, 0))
     text_game_over1 = font1.render("Press ESC", True, (255, 215, 0))
