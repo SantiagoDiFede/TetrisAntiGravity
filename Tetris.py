@@ -85,6 +85,7 @@ class Tetris:
                             i + self.figure.y < 0 or \
                             self.field[i + self.figure.y][j + self.figure.x] > 0:
                             #check for out of top boundary
+                            
 
                         intersection = True
         return intersection
@@ -118,12 +119,18 @@ class Tetris:
 
     def go_down(self):
         self.figure.y += 1
+        if self.gravity!='down':
+            if self.intersects():
+                self.figure.y -= 1
         if self.intersects():
             self.figure.y -= 1
             self.freeze()
 
     def go_up(self):
         self.figure.y -= 1
+        if self.gravity!='up':
+            if self.intersects():
+                self.figure.y += 1
         if self.intersects():
             self.figure.y += 1
             self.freeze()
@@ -141,9 +148,13 @@ class Tetris:
     def go_side(self, dx):
         old_x = self.figure.x
         self.figure.x += dx
+        if self.gravity=='right'or self.gravity=='left':
+            if self.intersects():
+                self.figure.x = old_x
+                self.freeze()
         if self.intersects():
             self.figure.x = old_x
-            self.freeze()
+
 
     def rotate(self):
         old_rotation = self.figure.rotation
@@ -188,7 +199,7 @@ pygame.display.set_caption("Tetris")
 done = False
 clock = pygame.time.Clock()
 fps = 25
-game = Tetris(30, 30)
+game = Tetris(30, 10)
 counter = 0
 
 pressing_down = False
@@ -200,7 +211,7 @@ while not done:
     if counter > 100000:
         counter = 0
 
-    if counter % (fps // game.level // 2) == 0 or pressing_down:
+    if counter % (fps // game.level // 1) == 0 or pressing_down:
         if game.state == "start":
             if game.gravity=='down':
                 game.go_down()
@@ -216,57 +227,66 @@ while not done:
             done = True
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP:
-                if game.gravity=='down':
-                    game.rotate()
-                else:
-                    game.go_up()
+                game.rotate()
+
             if event.key == pygame.K_LEFT:
-                if game.gravity=='right':
-                    game.rotate()
-                else:
-                    game.go_side(-1)
+                    if game.gravity=='down':
+                        game.go_side(-1)
+                    elif game.gravity=='right':
+                        game.go_down()
+                    elif game.gravity=='up':
+                        game.go_side(1)
+                    elif game.gravity=='left':
+                        game.go_up()
             if event.key == pygame.K_RIGHT:
-                if game.gravity=='left':
-                    game.rotate()
-                else:
-                    game.go_side(1)
-            if event.key == pygame.K_DOWN:
-                if game.gravity=='up':
-                    game.rotate()
-                else:
-                    pressing_down = True
+                    if game.gravity=='left':
+                        game.go_down()
+                    elif game.gravity=='down':
+                        game.go_side(1)
+                    elif game.gravity=='up':
+                        game.go_side(-1)
+                    elif game.gravity=='right':
+                        game.go_up()
+
             if event.key == pygame.K_SPACE:
                 game.go_space()
             if event.key == pygame.K_x:
                 game.gravity_switch()
             if event.key == pygame.K_ESCAPE:
-                game.__init__(30, 30)
+                game.__init__(30, 10)
     
     keys = pygame.key.get_pressed()
     
     if keys[pygame.K_DOWN]:
-        if game.gravity=='up':
-            pass
-        else:
-            game.go_down()
-    
-    if keys[pygame.K_UP]:
         if game.gravity=='down':
-            pass
-        else:
+            game.go_down()
+        elif game.gravity=='up':
+            game.go_up() 
+        elif game.gravity=='left':
+            game.go_side(-1)
+        elif game.gravity=='right':
+            game.go_side(1)  
+            """
+    if keys[pygame.K_LEFT]:
+        if game.gravity=='down':
+            game.go_side(-1)
+        elif game.gravity=='right':
+            game.go_down()
+        elif game.gravity=='up':
+            game.go_side(1)
+        elif game.gravity=='left':
             game.go_up()
 
-    if keys[pygame.K_LEFT]:
-        if game.gravity=='right':
-            pass
-        else:
-            game.go_side(-1)
     if keys[pygame.K_RIGHT]:
         if game.gravity=='left':
-            pass
-        else:
+            game.go_down()
+        elif game.gravity=='down':
             game.go_side(1)
-
+        elif game.gravity=='up':
+            game.go_side(-1)
+        elif game.gravity=='right':
+            game.go_up()
+            """
     if event.type == pygame.KEYUP:
             if event.key == pygame.K_DOWN:
                 pressing_down = False
