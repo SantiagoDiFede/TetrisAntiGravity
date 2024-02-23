@@ -1,6 +1,9 @@
 import pygame
 import random
 
+
+imp =pygame.image.load('red-skull.jpg')
+
 colors = [
     (0, 0, 0),
     (120, 37, 179),
@@ -52,8 +55,8 @@ class Tetris:
         self.field = []
         self.height = 0
         self.width = 0
-        self.x = 300
-        self.y = 85
+        self.x =   0
+        self.y = 0
         self.zoom = 20
         self.figure = None
         self.height = height
@@ -71,6 +74,9 @@ class Tetris:
                 new_line.append(0)
             self.field.append(new_line)
 
+    #display imp at the center of the field
+            
+
     def new_figure(self):
         self.figure = Figure(self.startX, self.startY)
 
@@ -84,24 +90,46 @@ class Tetris:
                             j + self.figure.x < 0 or \
                             i + self.figure.y < 0 or \
                             self.field[i + self.figure.y][j + self.figure.x] > 0:
-                            #check for out of top boundary
                             
 
                         intersection = True
         return intersection
 
     def break_lines(self):
+        mid_width = self.width // 2
+        mid_height = self.height // 2
         lines = 0
-        for i in range(1, self.height):
+        for i in range(0, self.height):
             zeros = 0
             for j in range(self.width):
                 if self.field[i][j] == 0:
                     zeros += 1
             if zeros == 0:
                 lines += 1
-                for i1 in range(i, 1, -1):
-                    for j in range(self.width):
-                        self.field[i1][j] = self.field[i1 - 1][j]
+                if i > mid_height:
+                    for i1 in range(i, 1, -1):
+                        for j in range(self.width):
+                            self.field[i1][j] = self.field[i1 - 1][j]
+                else:
+                    for i1 in range(i, self.height // 2 - 1, 1):
+                        for j in range(self.width):
+                            self.field[i1][j] = self.field[i1 + 1][j]
+
+        for i in range(0, self.width):
+            zeros = 0
+            for j in range(self.height):
+                if self.field[j][i] == 0:
+                    zeros += 1
+            if zeros == 0:
+                lines += 1
+                if i > mid_width:
+                    for i1 in range(i, 1, -1):
+                        for j in range(self.height):
+                            self.field[j][i1] = self.field[j][i1 - 1]
+                else:
+                    for i1 in range(i, self.width // 2 - 1, 1):
+                        for j in range(self.height):
+                            self.field[j][i1] = self.field[j][i1 + 1]
         self.score += lines ** 2
 
     def go_space(self):
@@ -172,6 +200,7 @@ class Tetris:
         elif self.gravity=='right':
             self.gravity='down'
 
+        #do not rotate the screen but every object in the game
         if self.gravity == 'down':
             self.screen_rotation = 0
         elif self.gravity == 'up':
@@ -189,9 +218,11 @@ pygame.init()
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 GRAY = (128, 128, 128)
+RED = (255, 0, 0)
 
-size = (1200, 750)
+size = (400,400)
 screen = pygame.display.set_mode(size)
+
 
 pygame.display.set_caption("Tetris")
 
@@ -199,19 +230,28 @@ pygame.display.set_caption("Tetris")
 done = False
 clock = pygame.time.Clock()
 fps = 25
-game = Tetris(30, 10)
+game = Tetris(20, 20)
 counter = 0
+image = pygame.image.load("Eyes/Eye_down.png").convert()
+center_x = game.x + (game.width // 2) * game.zoom
+center_y = game.y + (game.height // 2) * game.zoom
+image_x = center_x - (image.get_width() // 2)
+image_y = center_y - (image.get_height() // 2)
+scaled_image = pygame.transform.scale(image, (game.height, game.width))
 
+
+# Draw the image onto the screen
 pressing_down = False
 
 while not done:
+
     if game.figure is None:
         game.new_figure()
     counter += 1
     if counter > 100000:
         counter = 0
 
-    if counter % (fps // game.level // 1) == 0 or pressing_down:
+    if counter % (fps // game.level // 0.5) == 0 or pressing_down:
         if game.state == "start":
             if game.gravity=='down':
                 game.go_down()
@@ -253,7 +293,7 @@ while not done:
             if event.key == pygame.K_x:
                 game.gravity_switch()
             if event.key == pygame.K_ESCAPE:
-                game.__init__(30, 10)
+                game.__init__(20, 20)
     
     keys = pygame.key.get_pressed()
     
@@ -266,27 +306,6 @@ while not done:
             game.go_side(-1)
         elif game.gravity=='right':
             game.go_side(1)  
-            """
-    if keys[pygame.K_LEFT]:
-        if game.gravity=='down':
-            game.go_side(-1)
-        elif game.gravity=='right':
-            game.go_down()
-        elif game.gravity=='up':
-            game.go_side(1)
-        elif game.gravity=='left':
-            game.go_up()
-
-    if keys[pygame.K_RIGHT]:
-        if game.gravity=='left':
-            game.go_down()
-        elif game.gravity=='down':
-            game.go_side(1)
-        elif game.gravity=='up':
-            game.go_side(-1)
-        elif game.gravity=='right':
-            game.go_up()
-            """
     if event.type == pygame.KEYUP:
             if event.key == pygame.K_DOWN:
                 pressing_down = False
@@ -297,10 +316,14 @@ while not done:
 
     for i in range(game.height):
         for j in range(game.width):
-            pygame.draw.rect(screen, GRAY, [game.x + game.zoom * j, game.y + game.zoom * i, game.zoom, game.zoom], 1)
-            if game.field[i][j] > 0:
-                pygame.draw.rect(screen, colors[game.field[i][j]],
-                                 [game.x + game.zoom * j + 1, game.y + game.zoom * i + 1, game.zoom - 2, game.zoom - 1])
+                pygame.draw.rect(screen, GRAY, [game.x + game.zoom * j, game.y + game.zoom * i, game.zoom, game.zoom], 1)
+                if game.field[i][j] > 0:
+                    pygame.draw.rect(screen, colors[game.field[i][j]],
+                                [game.x + game.zoom * j + 1, game.y + game.zoom * i + 1, game.zoom - 2, game.zoom - 1])
+    image_x = 100  # Adjust this to change the x-position of the image
+    image_y = 100  # Adjust this to change the y-position of the image
+    screen.blit(scaled_image, (image_x, image_y))
+
 
     if game.figure is not None:
         for i in range(4):
