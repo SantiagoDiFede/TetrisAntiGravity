@@ -232,15 +232,23 @@ clock = pygame.time.Clock()
 fps = 25
 game = Tetris(20, 20)
 counter = 0
-image = pygame.image.load("Eyes/Eye_down.png").convert()
+image_down = pygame.image.load("Eyes/Eye_down.png").convert_alpha()
+image_up = pygame.image.load("Eyes/Eye_up.png").convert_alpha()
+image_left = pygame.image.load("Eyes/Eye_left.png").convert_alpha()
+image_right = pygame.image.load("Eyes/Eye_right.png").convert_alpha()
 center_x = game.x + (game.width // 2) * game.zoom
 center_y = game.y + (game.height // 2) * game.zoom
-image_x = center_x - (image.get_width() // 2)
-image_y = center_y - (image.get_height() // 2)
-scaled_image = pygame.transform.scale(image, (game.height, game.width))
+#scale the image to the size of 4*4 squares
+image_down = pygame.transform.scale(image_down, (game.zoom*4, game.zoom*4))
+image_up = pygame.transform.scale(image_up, (game.zoom*4, game.zoom*4))
+image_left = pygame.transform.scale(image_left, (game.zoom*4, game.zoom*4))
+image_right = pygame.transform.scale(image_right, (game.zoom*4, game.zoom*4))
+image_down.set_colorkey(WHITE)
+image_up.set_colorkey(WHITE)
+image_left.set_colorkey(WHITE)
+image_right.set_colorkey(WHITE)
 
 
-# Draw the image onto the screen
 pressing_down = False
 
 while not done:
@@ -316,13 +324,26 @@ while not done:
 
     for i in range(game.height):
         for j in range(game.width):
-                pygame.draw.rect(screen, GRAY, [game.x + game.zoom * j, game.y + game.zoom * i, game.zoom, game.zoom], 1)
+                #if it is one of the 8 central squares, display the image
+                if i in range(game.height//2-2,game.height//2+2) and j in range(game.width//2-2,game.width//2+2):
+                    pygame.draw.rect(screen, RED, [game.x + game.zoom * j, game.y + game.zoom * i, game.zoom, game.zoom], 1)
+                    #display the image over the 8 central squares
+                    center_x = game.x + (game.width // 2-2) * game.zoom
+                    center_y = game.y + (game.height // 2-2) * game.zoom
+                    if game.gravity=='down':
+                        screen.blit(image_down, (center_x, center_y))
+                    elif game.gravity=='up':
+                        screen.blit(image_up, (center_x, center_y))
+                    elif game.gravity=='left':
+                        screen.blit(image_left, (center_x, center_y))
+                    elif game.gravity=='right':
+                        screen.blit(image_right, (center_x, center_y))
+                else:
+                    pygame.draw.rect(screen, GRAY, [game.x + game.zoom * j, game.y + game.zoom * i, game.zoom, game.zoom], 1)
                 if game.field[i][j] > 0:
                     pygame.draw.rect(screen, colors[game.field[i][j]],
                                 [game.x + game.zoom * j + 1, game.y + game.zoom * i + 1, game.zoom - 2, game.zoom - 1])
-    image_x = 100  # Adjust this to change the x-position of the image
-    image_y = 100  # Adjust this to change the y-position of the image
-    screen.blit(scaled_image, (image_x, image_y))
+    
 
 
     if game.figure is not None:
