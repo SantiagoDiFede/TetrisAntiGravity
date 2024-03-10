@@ -19,34 +19,6 @@ neutral_colors = [
     (180, 234, 22),
 ]
 
-chaos_colors = [
-    (255, 0, 0),    # Red
-    (255, 69, 0),   # Orange-Red
-    (139, 69, 19),  # Brown
-    (255, 140, 0)   # Orange
-]
-
-order_colors = [
-    (0, 0, 255),    # Blue
-    (100, 100, 100),# Grey
-    (200, 200, 200),# Light Grey
-    (255, 255, 255)# White
-]
-
-
-uprising_colors = [
-    (255, 0, 255),  # Magenta
-    (255, 255, 0),  # Yellow
-    (0, 255, 255),  # Cyan
-    (255, 165, 0)   # Orange
-]
-
-tyranny_colors = [
-    (128, 128, 128),# Medium Grey
-    (150, 150, 150),# Dark Grey
-    (190, 190, 190),# Light Grey
-    (210, 180, 140) # Tan
-]
 
 # Initialize the game engine
 pygame.init()
@@ -78,21 +50,26 @@ image_down = pygame.image.load("Eyes/Eye_down.png").convert_alpha()
 image_up = pygame.image.load("Eyes/Eye_up.png").convert_alpha()
 image_left = pygame.image.load("Eyes/Eye_left.png").convert_alpha()
 image_right = pygame.image.load("Eyes/Eye_right.png").convert_alpha()
+image_blank = pygame.image.load("Eyes/1174418.png").convert_alpha()
 center_x = game.x + (game.width // 2) * game.zoom
 center_y = game.y + (game.height // 2) * game.zoom
 game.uprising = 0
 game.order = 0
 game.tyranny = 0
 game.chaos = 0
-#scale the image to the size of 4*4 squares
 image_down = pygame.transform.scale(image_down, (game.zoom*4, game.zoom*4))
 image_up = pygame.transform.scale(image_up, (game.zoom*4, game.zoom*4))
 image_left = pygame.transform.scale(image_left, (game.zoom*4, game.zoom*4))
 image_right = pygame.transform.scale(image_right, (game.zoom*4, game.zoom*4))
+image_blank = pygame.transform.scale(image_blank, (game.zoom*4, game.zoom*4))
 image_down.set_colorkey(WHITE)
 image_up.set_colorkey(WHITE)
 image_left.set_colorkey(WHITE)
 image_right.set_colorkey(WHITE)
+image_blank.set_colorkey(WHITE)
+center_x = game.x + (game.width // 2-2) * game.zoom
+center_y = game.y + (game.height // 2-2) * game.zoom
+ready_to_switch = False
 
 
 pressing_down = False
@@ -122,13 +99,21 @@ while not done:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP:
                 game.rotate()
-
-
-
             if event.key == pygame.K_SPACE:
                 game.go_space()
             if event.key == pygame.K_ESCAPE:
                 game.__init__(20, 20)
+            if event.key == pygame.K_a:
+                game.gravity_switch()
+            if event.key == pygame.K_z:
+                #game.chaos_piece()
+                continue
+            if event.key == pygame.K_e:
+                #game.order_piece()
+                continue
+            if event.key == pygame.K_r:
+                #game.uprise()
+                continue
     
     keys = pygame.key.get_pressed()
     
@@ -184,18 +169,28 @@ while not done:
     if counter % (fps * 7) == 0:
         random_number = random.randint(0, 100)
         if random_number < 50:
+            ready_to_switch = True
+            screen.blit(image_blank, (center_x, center_y))
+            pygame.time.delay(1000)
             game.gravity_switch()
 
 
+    current_mood = RED
+    if game.uprising > 0:
+        current_mood = (0, 255, 0)
+    
+    if game.order > 0:
+        current_mood = (0, 0, 255)
+
+    if game.tyranny > 0:
+        current_mood = (255, 0, 0)
+    
+    if game.chaos > 0:
+        current_mood = (255, 255, 0)
 
     for i in range(game.height):
         for j in range(game.width):
-                #if it is one of the 8 central squares, display the image
                 if i in range(game.height//2-2,game.height//2+2) and j in range(game.width//2-2,game.width//2+2):
-                    pygame.draw.rect(screen, RED, [game.x + game.zoom * j, game.y + game.zoom * i, game.zoom, game.zoom], 1)
-                    #display the image over the 8 central squares
-                    center_x = game.x + (game.width // 2-2) * game.zoom
-                    center_y = game.y + (game.height // 2-2) * game.zoom
                     if game.gravity=='down':
                         screen.blit(image_down, (center_x, center_y))
                     elif game.gravity=='up':
@@ -213,23 +208,15 @@ while not done:
 
 
     if game.figure is not None:
-        current_colors = neutral_colors
-        if game.uprising <= 1:
-            current_colors = current_colors + uprising_colors
-        elif game.order <= 1:
-            current_colors = current_colors + order_colors
-        elif game.tyranny <= 1:
-            current_colors = current_colors + tyranny_colors
-        elif game.chaos <= 1:
-            current_colors = current_colors + chaos_colors
         for i in range(4):
             for j in range(4):
                 p = i * 4 + j
                 if p in game.figure.image():
-                    pygame.draw.rect(screen, current_colors[game.figure.color],
+                    pygame.draw.rect(screen, neutral_colors[game.figure.color],
                                      [game.x + game.zoom * (j + game.figure.x) + 1,
                                       game.y + game.zoom * (i + game.figure.y) + 1,
                                       game.zoom - 2, game.zoom - 2])
+                    
 
     font = pygame.font.SysFont('Calibri', 25, True, False)
     font1 = pygame.font.SysFont('Calibri', 65, True, False)
@@ -245,6 +232,10 @@ while not done:
         screen.blit(text_game_over, [20, 200])
         screen.blit(text_game_over1, [25, 265])
 
+    if ready_to_switch:
+        game.gravity_switch()
+        ready_to_switch = False
+    
     pygame.display.flip()
     clock.tick(fps)
 

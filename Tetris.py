@@ -120,7 +120,14 @@ class Tetris:
                 self.figure.x -= 1
             elif self.gravity=='right':
                 self.figure.x += 1
-        self.figure.y -= 1
+        if self.gravity=='down':
+            self.figure.y -= 1
+        elif self.gravity=='up':
+            self.figure.y += 1
+        elif self.gravity=='left':
+            self.figure.x += 1
+        elif self.gravity=='right':
+            self.figure.x -= 1
         self.freeze()
 
     def go_down(self):
@@ -171,8 +178,6 @@ class Tetris:
     def gravity_switch(self):
         gravity_list = ['down', 'up', 'left', 'right']
         self.gravity = random.choice(gravity_list)
-
-
         if self.gravity == 'down':
             self.screen_rotation = 0
         elif self.gravity == 'up':
