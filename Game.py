@@ -1,10 +1,11 @@
+import random
 import time
 import pygame
 
 from Tetris import Tetris
 
 
-colors = [
+neutral_colors = [
     (0, 0, 0),
     (120, 37, 179),
     (100, 179, 179),
@@ -18,6 +19,34 @@ colors = [
     (180, 234, 22),
 ]
 
+chaos_colors = [
+    (255, 0, 0),    # Red
+    (255, 69, 0),   # Orange-Red
+    (139, 69, 19),  # Brown
+    (255, 140, 0)   # Orange
+]
+
+order_colors = [
+    (0, 0, 255),    # Blue
+    (100, 100, 100),# Grey
+    (200, 200, 200),# Light Grey
+    (255, 255, 255)# White
+]
+
+
+uprising_colors = [
+    (255, 0, 255),  # Magenta
+    (255, 255, 0),  # Yellow
+    (0, 255, 255),  # Cyan
+    (255, 165, 0)   # Orange
+]
+
+tyranny_colors = [
+    (128, 128, 128),# Medium Grey
+    (150, 150, 150),# Dark Grey
+    (190, 190, 190),# Light Grey
+    (210, 180, 140) # Tan
+]
 
 # Initialize the game engine
 pygame.init()
@@ -51,6 +80,10 @@ image_left = pygame.image.load("Eyes/Eye_left.png").convert_alpha()
 image_right = pygame.image.load("Eyes/Eye_right.png").convert_alpha()
 center_x = game.x + (game.width // 2) * game.zoom
 center_y = game.y + (game.height // 2) * game.zoom
+game.uprising = 0
+game.order = 0
+game.tyranny = 0
+game.chaos = 0
 #scale the image to the size of 4*4 squares
 image_down = pygame.transform.scale(image_down, (game.zoom*4, game.zoom*4))
 image_up = pygame.transform.scale(image_up, (game.zoom*4, game.zoom*4))
@@ -67,7 +100,7 @@ pressing_down = False
 while not done:
 
     if game.figure is None:
-        game.new_figure()
+            game.new_figure()
     counter += 1
     if counter > 100000:
         counter = 0
@@ -90,29 +123,10 @@ while not done:
             if event.key == pygame.K_UP:
                 game.rotate()
 
-            if event.key == pygame.K_LEFT:
-                    if game.gravity=='down':
-                        game.go_side(-1)
-                    elif game.gravity=='right':
-                        game.go_down()
-                    elif game.gravity=='up':
-                        game.go_side(1)
-                    elif game.gravity=='left':
-                        game.go_up()
-            if event.key == pygame.K_RIGHT:
-                    if game.gravity=='left':
-                        game.go_down()
-                    elif game.gravity=='down':
-                        game.go_side(1)
-                    elif game.gravity=='up':
-                        game.go_side(-1)
-                    elif game.gravity=='right':
-                        game.go_up()
+
 
             if event.key == pygame.K_SPACE:
                 game.go_space()
-            if event.key == pygame.K_x:
-                game.gravity_switch()
             if event.key == pygame.K_ESCAPE:
                 game.__init__(20, 20)
     
@@ -161,9 +175,16 @@ while not done:
     if event.type == pygame.KEYUP:
             if event.key == pygame.K_DOWN:
                 pressing_down = False
+    
+
             
 
     screen.fill(WHITE)
+
+    if counter % (fps * 7) == 0:
+        random_number = random.randint(0, 100)
+        if random_number < 50:
+            game.gravity_switch()
 
 
 
@@ -186,17 +207,26 @@ while not done:
                 else:
                     pygame.draw.rect(screen, GRAY, [game.x + game.zoom * j, game.y + game.zoom * i, game.zoom, game.zoom], 1)
                 if game.field[i][j] > 0:
-                    pygame.draw.rect(screen, colors[game.field[i][j]],
+                    pygame.draw.rect(screen, neutral_colors[game.field[i][j]],
                                 [game.x + game.zoom * j + 1, game.y + game.zoom * i + 1, game.zoom - 2, game.zoom - 1])
     
 
 
     if game.figure is not None:
+        current_colors = neutral_colors
+        if game.uprising <= 1:
+            current_colors = current_colors + uprising_colors
+        elif game.order <= 1:
+            current_colors = current_colors + order_colors
+        elif game.tyranny <= 1:
+            current_colors = current_colors + tyranny_colors
+        elif game.chaos <= 1:
+            current_colors = current_colors + chaos_colors
         for i in range(4):
             for j in range(4):
                 p = i * 4 + j
                 if p in game.figure.image():
-                    pygame.draw.rect(screen, colors[game.figure.color],
+                    pygame.draw.rect(screen, current_colors[game.figure.color],
                                      [game.x + game.zoom * (j + game.figure.x) + 1,
                                       game.y + game.zoom * (i + game.figure.y) + 1,
                                       game.zoom - 2, game.zoom - 2])

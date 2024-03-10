@@ -4,7 +4,6 @@ import random
 from Figure import Figure
 
 
-imp =pygame.image.load('red-skull.jpg')
 
 
 
@@ -29,13 +28,17 @@ class Tetris:
         self.score = 0
         self.state = "start"
         self.screen_rotation = 0
+        self.switchRate = 5
+        self.tyranny = 0
+        self.uprising = 0
+        self.order = 0
+        self.chaos = 0
         for i in range(height):
             new_line = []
             for j in range(width):
                 new_line.append(0)
             self.field.append(new_line)
 
-    #display imp at the center of the field
             
 
     def new_figure(self):
@@ -68,16 +71,21 @@ class Tetris:
             if zeros == 0:
                 lines += 1
                 if i > mid_height:
-                    for i1 in range(i, 1, -2):
+                    for i1 in range(i, self.height // 2, -1):
                         for j in range(self.width):
-                            #if i1-1< center line,continue
-                            if i1-1 == mid_height : 
-                                continue
                             self.field[i1][j] = self.field[i1 - 1][j]
+                    for j in range(self.width):
+                        self.field[self.height // 2][j] = 0
+                    self.tyranny += 1
                 else:
-                    for i1 in range(i, self.height // 2 - 1, 1):
+                    for i1 in range(i, self.height//2 - 1, 1):
                         for j in range(self.width):
                             self.field[i1][j] = self.field[i1 + 1][j]
+                    for j in range(self.width):
+                        self.field[self.height//2 - 1][j] = 0
+                    self.uprising += 1
+                        
+                        
 
         for i in range(0, self.width):
             zeros = 0
@@ -87,15 +95,19 @@ class Tetris:
             if zeros == 0:
                 lines += 1
                 if i > mid_width:
-                    for i1 in range(i, 1, -2):
-                        if i1 == mid_width:
-                            continue
+                    for i1 in range(i, self.width // 2 + 1, -1):
                         for j in range(self.height):
                             self.field[j][i1] = self.field[j][i1 - 1]
+                    for j in range(self.height):
+                        self.field[j][self.width // 2 + 1] = 0
+                    self.order += 1
                 else:
                     for i1 in range(i, self.width // 2 - 1, 1):
                         for j in range(self.height):
                             self.field[j][i1] = self.field[j][i1 + 1]
+                    for j in range(self.height):
+                        self.field[j][self.width // 2 - 1] = 0
+                    self.chaos += 1
         self.score += lines ** 2
 
     def go_space(self):
@@ -157,16 +169,10 @@ class Tetris:
             self.figure.rotation = old_rotation
     
     def gravity_switch(self):
-        if self.gravity=='down':
-            self.gravity='left'
-        elif self.gravity=='left':
-            self.gravity='up'
-        elif self.gravity=='up':
-            self.gravity='right'
-        elif self.gravity=='right':
-            self.gravity='down'
+        gravity_list = ['down', 'up', 'left', 'right']
+        self.gravity = random.choice(gravity_list)
 
-        #do not rotate the screen but every object in the game
+
         if self.gravity == 'down':
             self.screen_rotation = 0
         elif self.gravity == 'up':
