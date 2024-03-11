@@ -70,6 +70,7 @@ image_blank.set_colorkey(WHITE)
 center_x = game.x + (game.width // 2-2) * game.zoom
 center_y = game.y + (game.height // 2-2) * game.zoom
 ready_to_switch = False
+switch_count = 15
 
 
 pressing_down = False
@@ -104,16 +105,13 @@ while not done:
             if event.key == pygame.K_ESCAPE:
                 game.__init__(20, 20)
             if event.key == pygame.K_a:
-                game.gravity_switch()
-            if event.key == pygame.K_z:
-                #game.chaos_piece()
-                continue
-            if event.key == pygame.K_e:
-                #game.order_piece()
-                continue
-            if event.key == pygame.K_r:
-                #game.uprise()
-                continue
+                if game.forced_switch > 0:
+                    game.gravity_switch()
+                    game.forced_switch -= 1
+                    switch_count = 15
+            if event.key == pygame.K_KP_ENTER:
+                if game.state == "won":
+                    game.state = "start"
     
     keys = pygame.key.get_pressed()
     
@@ -166,31 +164,24 @@ while not done:
 
     screen.fill(WHITE)
 
-    if counter % (fps * 7) == 0:
-        random_number = random.randint(0, 100)
-        if random_number < 50:
+    if counter % fps == 0:
+        if switch_count > 0:
+            switch_count -= 1
+
+    if switch_count == 0:
             ready_to_switch = True
-            screen.blit(image_blank, (center_x, center_y))
-            pygame.time.delay(1000)
-            game.gravity_switch()
 
-
-    current_mood = RED
-    if game.uprising > 0:
-        current_mood = (0, 255, 0)
-    
-    if game.order > 0:
+    if switch_count <= 3:
         current_mood = (0, 0, 255)
-
-    if game.tyranny > 0:
-        current_mood = (255, 0, 0)
-    
-    if game.chaos > 0:
-        current_mood = (255, 255, 0)
+    else:
+        current_mood = RED
 
     for i in range(game.height):
         for j in range(game.width):
                 if i in range(game.height//2-2,game.height//2+2) and j in range(game.width//2-2,game.width//2+2):
+                    pygame.draw.rect(screen, current_mood, [game.x + game.zoom * j, game.y + game.zoom * i, game.zoom, game.zoom], 1)
+                    
+
                     if game.gravity=='down':
                         screen.blit(image_down, (center_x, center_y))
                     elif game.gravity=='up':
@@ -206,6 +197,10 @@ while not done:
                                 [game.x + game.zoom * j + 1, game.y + game.zoom * i + 1, game.zoom - 2, game.zoom - 1])
     
 
+    if ready_to_switch:
+        ready_to_switch = False
+        game.gravity_switch()
+        switch_count = 15
 
     if game.figure is not None:
         for i in range(4):
@@ -224,19 +219,49 @@ while not done:
     screen.blit(rotated_screen, rotated_screen.get_rect(center=screen.get_rect().center))
 
     text = font.render("Score: " + str(game.score), True, BLACK)
+    text_time = font.render("Time: " + str(counter // fps), True, BLACK)
+    a_counter = font.render("down: " + str(game.uprising), True, BLACK)
+    z_counter = font.render("up: " + str(game.tyranny), True, BLACK)
+    e_counter = font.render("left: " + str(game.chaos), True, BLACK)
+    r_counter = font.render("right: " + str(game.order), True, BLACK)
+    forced_switch = font.render("Switch: " + str(game.forced_switch), True, BLACK)
     text_game_over = font1.render("Game Over", True, (255, 125, 0))
     text_game_over1 = font1.render("Press ESC", True, (255, 215, 0))
+    text_won = font1.render("Demo Level Cleared", True, (255, 0, 125))
+    text_won2 = font1.render("Press Enter to continue", True, (255, 0, 215))
+    
 
     screen.blit(text, [0, 0])
+    screen.blit(forced_switch, [120, 0])
+    screen.blit(text_time, [0, 20])
+    screen.blit(a_counter, [310, 0])
+    screen.blit(z_counter, [310, 20])
+    screen.blit(e_counter, [310, 40])
+    screen.blit(r_counter, [310, 60])
     if game.state == "gameover":
         screen.blit(text_game_over, [20, 200])
         screen.blit(text_game_over1, [25, 265])
 
-    if ready_to_switch:
-        game.gravity_switch()
-        ready_to_switch = False
     
     pygame.display.flip()
     clock.tick(fps)
+
+    if game.uprising >= 3 and game.order >= 3 and game.tyranny >= 3 and game.chaos >= 3:
+        game.state = "won"
+        screen.blit(text_won, [10, 100])
+        screen.blit(text_won2, [15, 135])
+        pygame.display.flip()
+        event = pygame.event.wait()
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RETURN:
+                game.uprising = 0
+                game.order = 0
+                game.tyranny = 0
+                game.chaos = 0
+                game.state = "start"
+            elif event.key == pygame.K_ESCAPE:
+                game.__init__(20, 20)
+        
+
 
 pygame.quit()

@@ -33,6 +33,7 @@ class Tetris:
         self.uprising = 0
         self.order = 0
         self.chaos = 0
+        self.forced_switch = 10
         for i in range(height):
             new_line = []
             for j in range(width):
@@ -177,6 +178,7 @@ class Tetris:
     
     def gravity_switch(self):
         gravity_list = ['down', 'up', 'left', 'right']
+        gravity_list.remove(self.gravity)
         self.gravity = random.choice(gravity_list)
         if self.gravity == 'down':
             self.screen_rotation = 0
