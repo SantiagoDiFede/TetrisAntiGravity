@@ -104,14 +104,13 @@ while not done:
                 game.go_space()
             if event.key == pygame.K_ESCAPE:
                 game.__init__(20, 20)
+                switch_count = 15
+                counter = 0
             if event.key == pygame.K_a:
                 if game.forced_switch > 0:
                     game.gravity_switch()
                     game.forced_switch -= 1
                     switch_count = 15
-            if event.key == pygame.K_KP_ENTER:
-                if game.state == "won":
-                    game.state = "start"
     
     keys = pygame.key.get_pressed()
     
@@ -214,7 +213,7 @@ while not done:
                     
 
     font = pygame.font.SysFont('Calibri', 25, True, False)
-    font1 = pygame.font.SysFont('Calibri', 65, True, False)
+    font1 = pygame.font.SysFont('Calibri', 45, True, False)
     rotated_screen = pygame.transform.rotate(screen, game.screen_rotation)
     screen.blit(rotated_screen, rotated_screen.get_rect(center=screen.get_rect().center))
 
@@ -227,8 +226,8 @@ while not done:
     forced_switch = font.render("Switch: " + str(game.forced_switch), True, BLACK)
     text_game_over = font1.render("Game Over", True, (255, 125, 0))
     text_game_over1 = font1.render("Press ESC", True, (255, 215, 0))
-    text_won = font1.render("Demo Level Cleared", True, (255, 0, 125))
-    text_won2 = font1.render("Press Enter to continue", True, (255, 0, 215))
+    text_won = font1.render("Demo Level Cleared", True, (205, 0, 125))
+    text_won2 = font1.render("Enter to continue", True, (205, 0, 215))
     
 
     screen.blit(text, [0, 0])
@@ -248,8 +247,9 @@ while not done:
 
     if game.uprising >= 3 and game.order >= 3 and game.tyranny >= 3 and game.chaos >= 3:
         game.state = "won"
-        screen.blit(text_won, [10, 100])
-        screen.blit(text_won2, [15, 135])
+        screen.blit(text_won, [20, 200])
+        screen.blit(text_won2, [25, 265])
+        screen.blit(text_game_over1, [35, 265])
         pygame.display.flip()
         event = pygame.event.wait()
         if event.type == pygame.KEYDOWN:
